@@ -1,0 +1,64 @@
+# minikube_prom_stack_values.yaml
+fullnameOverride: "monitoring"
+
+prometheusOperator:
+  createCustomResource: true
+  enabled: true
+
+# -----------------------
+# Prometheus persistence
+# -----------------------
+prometheus:
+  prometheusSpec:
+    retention: 15d       # Keep metrics for 15 days
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: "observability-storage"
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 5Gi   # size of persistent storage
+
+# -----------------------
+# Alertmanager persistence
+# -----------------------
+alertmanager:
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: "observability-storage"
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 1Gi
+
+# -----------------------
+# Grafana persistence
+# -----------------------
+grafana:
+  enabled: true
+  adminUser: "admin"
+  adminPassword: "prom-operator"
+  persistence:
+    enabled: true
+    storageClassName: "observability-storage"
+    size: 1Gi
+  service:
+    type: ClusterIP
+    port: 80
+  securityContext:
+    fsGroup: 472
+
+# Enable exporters for node and kube state
+kubeStateMetrics:
+  enabled: true
+
+nodeExporter:
+  enabled: true
+
+# RBAC safe defaults
+rbac:
+  create: true
+
